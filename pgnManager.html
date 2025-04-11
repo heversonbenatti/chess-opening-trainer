@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PGN Variation Parser</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #saved-games {
+      margin-top: 20px;
+    }
+
+    .game-item {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #f9f9f9;
+    }
+
+    .parsed-line {
+      margin: 5px 0;
+      padding: 3px;
+      background-color: #fff;
+      border-left: 3px solid #4CAF50;
+    }
+
+    .main-line {
+      font-weight: bold;
+      border-left-color: #2196F3;
+    }
+    
+    .controls {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>PGN Storage</h1>
+  
+  <form id="pgn-form">
+    <div class="form-group">
+      <label for="game-name">Game Name:</label>
+      <input type="text" id="game-name" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="pgn-input">PGN File:</label>
+      <input type="file" id="pgn-input" accept=".pgn" required>
+    </div>
+    
+    <button type="submit">Save PGN</button>
+  </form>
+  
+  <div id="saved-games">
+    <h2>Saved Games</h2>
+    <div class="controls">
+      <button id="clear-all">Clear All Games</button>
+    </div>
+    <div id="games-list"></div>
+  </div>
+
+  <script type="module">
+    import { extractPGNLines } from './pgnParser.js';
+    import { saveGame, getSavedGames, deleteGame, clearAllGames } from './pgnStorage.js';
+
+    // Render the games list
+    function renderGamesList() {
+      const games = getSavedGames();
+      const gamesList = document.getElementById('games-list');
+      
+      if (games.length === 0) {
+        gamesList.innerHTML = '<p>No games saved yet.</p>';
+        return;
+      }
+      
+      gamesList.innerHTML = games.map((game, index) => `
+        <div class="game-item">
+          <h3>${game.name}</h3>
+          <p>Saved: ${new Date(game.date).toLocaleString()}</p>
+          <button class="delete-btn" data-index="${index}">Delete</button>
+          <div class="parsed-lines">
+            ${game.parsedLines.map((line, i) => `
+              <div class="parsed-line ${i === 0 ? 'main-line' : ''}">
+                ${i === 0 ? '<strong>Main line:</strong> ' : `<strong>Variation ${i}:</strong> `}
+                ${line.substring(0, 100)}${line.length > 100 ? '...' : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+      
+      // Add event listeners to delete buttons
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          deleteGame(parseInt(e.target.dataset.index));
+          renderGamesList();
+        });
+      });
+    }
+    
+    // Form handling
+    document.getElementById('pgn-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const nameInput = document.getElementById('game-name');
+      const fileInput = document.getElementById('pgn-input');
+      
+      const name = nameInput.value.trim();
+      const file = fileInput.files[0];
+      
+      if (!name || !file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const pgnText = event.target.result;
+        const parsedLines = extractPGNLines(pgnText);
+        saveGame(name, pgnText, parsedLines);
+        renderGamesList();
+        
+        // Reset form
+        nameInput.value = '';
+        fileInput.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    // Clear all games button
+    document.getElementById('clear-all').addEventListener('click', function(e) {
+      e.preventDefault();
+      if (confirm('Are you sure you want to delete all saved games?')) {
+        clearAllGames();
+        renderGamesList();
+      }
+    });
+    
+    // Initial render
+    renderGamesList();
+  </script>
+</body>
+
+</html>

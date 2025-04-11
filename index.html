@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chess Game with Openings</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css" />
+</head>
+<body>
+  <div class="controls">
+    <div class="game-setup">
+      <label for="user-color">Choose your color:</label>
+      <select id="user-color">
+        <option value="w">White</option>
+        <option value="b">Black</option>
+      </select>
+      <button id="start-game">Start Game</button>
+      <button id="reset-game" disabled>Reset Game</button>
+      <span id="turn-label">Turn: </span>
+    </div>
+    <div class="openings">
+      <h3>Select Opening Lines</h3>
+      <div id="openings-container">
+        <!-- Dynamically loaded opening lines from local storage -->
+      </div>
+    </div>
+  </div>
+  <div id="board" style="width: 400px"></div>
+  <div id="bot-message"></div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
